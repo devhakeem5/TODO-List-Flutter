@@ -5,6 +5,8 @@ import '../modules/home/home_controller.dart';
 import '../modules/home/home_view.dart';
 import '../modules/onboarding/onboarding_controller.dart';
 import '../modules/onboarding/onboarding_view.dart';
+import '../modules/settings/controller/settings_controller.dart';
+import '../modules/settings/view/settings_view.dart';
 import '../modules/task/controller/add_task_controller.dart';
 import '../modules/task/view/add_task_view.dart';
 import '../modules/task_details/controller/task_details_controller.dart';
@@ -40,6 +42,13 @@ class AppPages {
       page: () => const TaskDetailsView(),
       binding: BindingsBuilder(() {
         Get.put(TaskDetailsController());
+      }),
+    ),
+    GetPage(
+      name: Routes.settings,
+      page: () => const SettingsView(),
+      binding: BindingsBuilder(() {
+        Get.put(SettingsController());
       }),
     ),
   ];

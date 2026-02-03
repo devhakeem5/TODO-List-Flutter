@@ -1,6 +1,6 @@
 class DbConstants {
   static const String databaseName = 'todo_app.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 3; // Updated to fix missing columns and tables
 
   // Tables
   static const String tableTasks = 'tasks';
@@ -26,6 +26,15 @@ class DbConstants {
   static const String colRecurrenceRule = 'recurrenceRule';
   static const String colReminderDateTime = 'reminderDateTime';
   static const String colNotificationId = 'notificationId';
+
+  // New Task Columns (v2)
+  static const String colTaskType = 'taskType';
+  static const String colRecurrenceDays = 'recurrenceDays'; // JSON array [0-6]
+  static const String colExcludedDays = 'excludedDays'; // JSON array of ISO dates
+  static const String colReminderLevel = 'reminderLevel';
+  static const String colStartTime = 'startTime'; // HH:mm format
+  static const String colEndTime = 'endTime'; // HH:mm format
+  static const String colReminderEnabled = 'reminderEnabled';
 
   // Category Columns
   static const String colName = 'name';

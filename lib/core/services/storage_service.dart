@@ -41,4 +41,6 @@ class StorageService extends GetxService {
 class StorageKeys {
   static const String userName = 'user_name';
   static const String isFirstLaunch = 'is_first_launch';
+  static const String globalReminderLevel = 'global_reminder_level';
+  static const String disabledTaskReminders = 'disabled_task_reminders'; // JSON list of task IDs
 }

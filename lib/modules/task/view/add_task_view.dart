@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../../../core/constants/enums.dart';
 import '../controller/add_task_controller.dart';
+import 'widgets/time_type_bottom_sheet.dart';
 
 class AddTaskView extends GetView<AddTaskController> {
   const AddTaskView({super.key});
@@ -12,405 +13,498 @@ class AddTaskView extends GetView<AddTaskController> {
     return Scaffold(
       backgroundColor: Get.theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('New Task', style: Get.theme.appBarTheme.titleTextStyle),
-        backgroundColor: Get.theme.appBarTheme.backgroundColor,
+        title: const Text('Add Task'),
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.close, color: Get.theme.iconTheme.color),
-          onPressed: () => Get.back(),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Progress Indicator
+        leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Get.back()),
+        actions: [
           Obx(
-            () => LinearProgressIndicator(
-              value: (controller.currentStep.value + 1) / controller.totalSteps,
-              color: Get.theme.primaryColor,
-              backgroundColor: Get.theme.dividerColor,
-            ),
-          ),
-
-          Expanded(
-            child: PageView(
-              physics: const NeverScrollableScrollPhysics(), // Managed by controller
-              // We'll use IndexedStack or just render current step for simplicity and performance
-              children: [Obx(() => _buildCurrentStep(controller.currentStep.value))],
-            ),
-          ),
-
-          // Bottom Actions
-          _buildBottomBar(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCurrentStep(int step) {
-    switch (step) {
-      case 0:
-        return _buildStep1BasicInfo();
-      case 1:
-        return _buildStep2TaskType();
-      case 2:
-        return _buildStep3Details();
-      case 3:
-        return _buildStep4Optional();
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  Widget _buildStep1BasicInfo() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'What needs to be done?',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          TextField(
-            controller: controller.titleController,
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: 'Enter task title',
-              border: OutlineInputBorder(),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Get.theme.primaryColor, width: 2),
+            () => TextButton(
+              onPressed: controller.isTitleValid.value ? () => controller.saveTask() : null,
+              child: const Text(
+                'Save',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
-            style: const TextStyle(fontSize: 18),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStep2TaskType() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'When do you want to do it?',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-
-          // Toggle
-          Row(
-            children: [
-              _buildTypeOption(label: 'Specific Date', isDate: true),
-              const SizedBox(width: 16),
-              _buildTypeOption(label: 'Time Period', isDate: false),
-            ],
-          ),
-
-          const SizedBox(height: 32),
-
-          // Date Picker / Time Range Picker
-          if (controller.isDateBased.value)
-            _buildDatePicker(
-              label: 'Due Date',
-              selectedDate: controller.selectedDueDate.value,
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: Get.context!,
-                  initialDate: controller.selectedDueDate.value,
-                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                  lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
-                );
-                if (picked != null) controller.selectedDueDate.value = picked;
-              },
-            )
-          else
-            Column(
-              children: [
-                _buildDatePicker(
-                  label: 'Start Date',
-                  selectedDate: controller.selectedStartDate.value,
-                  onTap: () async {
-                    // Logic for picking start
-                    final picked = await showDatePicker(
-                      context: Get.context!,
-                      initialDate: controller.selectedStartDate.value,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) {
-                      controller.selectedStartDate.value = picked;
-                      // Auto adjust end date if needed?
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildDatePicker(
-                  label: 'End Date',
-                  selectedDate: controller.selectedEndDate.value,
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: Get.context!,
-                      initialDate: controller.selectedEndDate.value,
-                      firstDate: controller.selectedStartDate.value,
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) controller.selectedEndDate.value = picked;
-                  },
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypeOption({required String label, required bool isDate}) {
-    final isSelected = controller.isDateBased.value == isDate;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => controller.setTaskType(isDate),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Get.theme.colorScheme.primary.withOpacity(0.1)
-                : Get.theme.cardTheme.color,
-            border: Border.all(
-              color: isSelected ? Get.theme.colorScheme.primary : Get.theme.dividerColor,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Icon(
-                isDate ? Icons.calendar_today : Icons.schedule,
-                color: isSelected ? Get.theme.colorScheme.primary : Get.theme.iconTheme.color,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Get.theme.colorScheme.primary : Get.theme.disabledColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDatePicker({
-    required String label,
-    required DateTime selectedDate,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Get.theme.dividerColor),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Column(
           children: [
-            Icon(Icons.calendar_month, color: Get.theme.iconTheme.color),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: TextStyle(fontSize: 12, color: Get.theme.disabledColor)),
-                Text(
-                  selectedDate.toString().split(' ')[0], // Simple format
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+            _buildBasicInfoSection(),
+            const SizedBox(height: 20),
+            _buildTimingSection(),
+            const SizedBox(height: 20),
+            _buildMetadataSection(),
+            const SizedBox(height: 20),
+            _buildSubtasksSection(),
+            const SizedBox(height: 20),
+            _buildAdvancedSection(),
+            const SizedBox(height: 100), // Space for FAB or bottom padding
           ],
         ),
       ),
+      bottomNavigationBar: _buildBottomSaveButton(),
     );
   }
 
-  Widget _buildStep3Details() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+  Widget _buildSection({required String title, required IconData icon, required Widget child}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: Get.theme.primaryColor),
+              const SizedBox(width: 8),
+              Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Get.theme.cardTheme.color,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Get.theme.shadowColor.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBasicInfoSection() {
+    return _buildSection(
+      title: 'General Info',
+      icon: Icons.info_outline,
+      child: Column(
+        children: [
+          TextField(
+            controller: controller.titleController,
+            decoration: const InputDecoration(
+              hintText: 'What needs to be done?',
+              border: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              filled: false,
+            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+          ),
+          const Divider(),
+          TextField(
+            controller: controller.descriptionController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'Add a description (optional)',
+              border: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              filled: false,
+            ),
+            style: const TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimingSection() {
+    return _buildSection(
+      title: 'التوقيت',
+      icon: Icons.access_time,
+      child: Column(
+        children: [
+          // Time Type Selection Button
+          InkWell(
+            onTap: () => _showTimeTypeBottomSheet(),
+            borderRadius: BorderRadius.circular(12),
+            child: Obx(() {
+              final taskType = controller.selectedTaskType.value;
+              final hasTime = taskType != TaskType.open;
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: hasTime
+                      ? Get.theme.primaryColor.withOpacity(0.1)
+                      : Get.theme.cardTheme.color,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: hasTime ? Get.theme.primaryColor : Get.theme.dividerColor,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _getTaskTypeIcon(taskType),
+                      color: hasTime ? Get.theme.primaryColor : Get.theme.hintColor,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            hasTime ? taskType.arabicLabel : 'تحديد الوقت',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: hasTime
+                                  ? Get.theme.primaryColor
+                                  : Get.theme.textTheme.bodyLarge?.color,
+                            ),
+                          ),
+                          if (hasTime)
+                            Text(
+                              controller.timeTypeDisplayText,
+                              style: TextStyle(fontSize: 12, color: Get.theme.hintColor),
+                            ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_left, color: Get.theme.hintColor),
+                  ],
+                ),
+              );
+            }),
+          ),
+
+          // Show additional time config for defaultDay type
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: Obx(() {
+              if (controller.selectedTaskType.value != TaskType.defaultDay) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                children: [
+                  const Divider(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: Get.context!,
+                              initialDate: controller.selectedDueDate.value,
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                            );
+                            if (picked != null) {
+                              controller.selectedDueDate.value = picked;
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Get.theme.primaryColor.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_today_outlined, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${controller.selectedDueDate.value.day}/${controller.selectedDueDate.value.month}/${controller.selectedDueDate.value.year}',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () async {
+                            final picked = await showTimePicker(
+                              context: Get.context!,
+                              initialTime: controller.selectedTime.value,
+                            );
+                            if (picked != null) {
+                              controller.selectedTime.value = picked;
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Get.theme.primaryColor.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.timer_outlined, size: 18),
+                                const SizedBox(width: 8),
+                                Text(controller.selectedTime.value.format(Get.context!)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getTaskTypeIcon(TaskType type) {
+    switch (type) {
+      case TaskType.open:
+        return Icons.all_inclusive;
+      case TaskType.defaultDay:
+        return Icons.calendar_today;
+      case TaskType.recurring:
+        return Icons.repeat;
+      case TaskType.timeRange:
+        return Icons.date_range;
+    }
+  }
+
+  void _showTimeTypeBottomSheet() {
+    Get.bottomSheet(const TimeTypeBottomSheet(), isScrollControlled: true);
+  }
+
+  Widget _buildMetadataSection() {
+    return _buildSection(
+      title: 'Customization',
+      icon: Icons.tune,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Details', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 24),
-
-          // Priority
+          const Text('Category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 12),
+          Obx(() {
+            if (controller.categories.isEmpty) return const Text('No categories.');
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: controller.categories.map((cat) {
+                  return Obx(() {
+                    final isSelected = controller.selectedCategory.value?.id == cat.id;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: Text(cat.name),
+                        selected: isSelected,
+                        onSelected: (val) => controller.selectedCategory.value = val ? cat : null,
+                        backgroundColor: Get.theme.scaffoldBackgroundColor,
+                        selectedColor: Get.theme.primaryColor.withOpacity(0.2),
+                      ),
+                    );
+                  });
+                }).toList(),
+              ),
+            );
+          }),
+          const SizedBox(height: 20),
           const Text('Priority', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Obx(
             () => Row(
-              // Priority Segmented Control
               children: [
-                _buildPriorityChip('Low', Colors.green),
-                const SizedBox(width: 12),
-                _buildPriorityChip('Medium', Colors.amber),
-                const SizedBox(width: 12),
-                _buildPriorityChip('High', Colors.red),
+                _buildPriorityButton('Low', TaskPriority.low, Colors.green),
+                const SizedBox(width: 8),
+                _buildPriorityButton('Medium', TaskPriority.medium, Colors.amber),
+                const SizedBox(width: 8),
+                _buildPriorityButton('High', TaskPriority.high, Colors.red),
               ],
             ),
           ),
-
-          const Divider(height: 48),
-
-          // Categories
-          const Text('Category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 12),
-          // Simple dropdown or list
-          Obx(() {
-            if (controller.categories.isEmpty) return const Text('No categories found.');
-            return Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: controller.categories.map((cat) {
-                final isSelected = controller.selectedCategory.value?.id == cat.id;
-                return FilterChip(
-                  label: Text(cat.name),
-                  selected: isSelected,
-                  onSelected: (val) {
-                    controller.selectedCategory.value = val ? cat : null;
-                  },
-                );
-              }).toList(),
-            );
-          }),
         ],
       ),
     );
   }
 
-  Widget _buildPriorityChip(String label, Color color) {
-    // Naive mapping from string to Enum for check
-    // Assuming label matches enum values slightly or we hardcode logic
-    // Low -> TaskPriority.low
-
-    // Helper for comparison
-    bool isSelected = false;
-    if (label == 'Low' && controller.selectedPriority.value.toString().contains('low')) {
-      isSelected = true;
-    }
-    if (label == 'Medium' && controller.selectedPriority.value.toString().contains('medium')) {
-      isSelected = true;
-    }
-    if (label == 'High' && controller.selectedPriority.value.toString().contains('high')) {
-      isSelected = true;
-    }
-
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      selectedColor: color.withOpacity(0.2),
-      labelStyle: TextStyle(color: isSelected ? color : Get.theme.textTheme.bodyLarge?.color),
-      onSelected: (val) {
-        if (val) {
-          if (label == 'Low') {
-            controller.selectedPriority.value = (TaskPriority.values.firstWhere(
-              (e) => e.toString().contains('low'),
-            ));
-          }
-          if (label == 'Medium') {
-            controller.selectedPriority.value = (TaskPriority.values.firstWhere(
-              (e) => e.toString().contains('medium'),
-            ));
-          }
-          if (label == 'High') {
-            controller.selectedPriority.value = (TaskPriority.values.firstWhere(
-              (e) => e.toString().contains('high'),
-            ));
-          }
-          // Fix: TaskPriority is imported, but we need exact enum.
-          // Ideally we use Enum values directly.
-          // Let's assume the Enum import is visible.
-          // TaskPriority.low, TaskPriority.medium, TaskPriority.high are likely available.
-          if (label == 'Low') controller.selectedPriority.value = (TaskPriority.low);
-          if (label == 'Medium') controller.selectedPriority.value = (TaskPriority.medium);
-          if (label == 'High') controller.selectedPriority.value = (TaskPriority.high);
-        }
-      },
-    );
-  }
-
-  Widget _buildStep4Optional() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Anything else?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 24),
-
-          TextField(
-            controller: controller.descriptionController,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              hintText: 'Add a description...',
-              border: OutlineInputBorder(),
+  Widget _buildPriorityButton(String label, TaskPriority priority, Color color) {
+    final isSelected = controller.selectedPriority.value == priority;
+    return Expanded(
+      child: InkWell(
+        onTap: () => controller.selectedPriority.value = priority,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withOpacity(0.12) : Get.theme.scaffoldBackgroundColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: isSelected ? color : Get.theme.dividerColor, width: 1.5),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? color : Get.theme.textTheme.bodyMedium?.color,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          // Subtasks placeholder
-          // const SizedBox(height: 24),
-          // const Text('Subtasks (Coming Soon)', style: TextStyle(color: Colors.grey)),
+  Widget _buildSubtasksSection() {
+    return _buildSection(
+      title: 'Subtasks',
+      icon: Icons.checklist,
+      child: Column(
+        children: [
+          Obx(
+            () => AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Column(
+                children: List.generate(controller.subtaskControllers.length, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.subdirectory_arrow_right, size: 18, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: controller.subtaskControllers[index],
+                            decoration: InputDecoration(
+                              hintText: 'Subtask ${index + 1}',
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.remove_circle_outline,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
+                          onPressed: () => controller.removeSubtask(index),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () => controller.addSubtask(),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add Subtask'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildAdvancedSection() {
+    return Column(
+      children: [
+        Theme(
+          data: Get.theme.copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            title: const Text('Advanced Options', style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: Icon(Icons.settings_outlined, color: Get.theme.primaryColor),
+            childrenPadding: const EdgeInsets.all(16),
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Reminder'),
+                  TextButton(
+                    onPressed: () async {
+                      final date = await showDatePicker(
+                        context: Get.context!,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (date != null) {
+                        final time = await showTimePicker(
+                          context: Get.context!,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (time != null) {
+                          controller.reminderDateTime.value = DateTime(
+                            date.year,
+                            date.month,
+                            date.day,
+                            time.hour,
+                            time.minute,
+                          );
+                        }
+                      }
+                    },
+                    child: Obx(
+                      () => Text(
+                        controller.reminderDateTime.value == null
+                            ? 'Set Reminder'
+                            : controller.reminderDateTime.value!.toString().substring(0, 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Opacity(
+                opacity: 0.5,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.repeat, size: 20),
+                      SizedBox(width: 12),
+                      Text('Recurrence (Coming Soon)'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomSaveButton() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Get.theme.scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Get.theme.shadowColor.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: const Offset(0, -2),
+            offset: const Offset(0, -4),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Back Button
-          TextButton(
-            onPressed: controller.currentStep.value == 0
-                ? null
-                : controller
-                      .previousStep, // Disable on step 0 or hide? Controller handles navigation.
-            child: const Text('Back'),
-          ),
-
-          // Next/Save Button
-          Obx(
-            () => ElevatedButton(
-              onPressed: controller.currentStep.value == 0 && !controller.isTitleValid.value
-                  ? null
-                  : controller.nextStep,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: Text(
-                controller.currentStep.value == controller.totalSteps - 1 ? 'Save Task' : 'Next',
-              ),
+      child: SafeArea(
+        child: Obx(
+          () => ElevatedButton(
+            onPressed: controller.isTitleValid.value ? () => controller.saveTask() : null,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 55),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: Get.theme.primaryColor,
+              elevation: 0,
+            ),
+            child: const Text(
+              'Create Task',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

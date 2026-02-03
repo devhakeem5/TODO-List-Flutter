@@ -130,6 +130,12 @@ class HomeView extends GetView<HomeController> {
                   Get.bottomSheet(const FilterBottomSheet(), isScrollControlled: true);
                 },
               ),
+              IconButton(
+                icon: Icon(Icons.settings_outlined, color: Theme.of(context).iconTheme.color),
+                onPressed: () {
+                  Get.toNamed(Routes.settings);
+                },
+              ),
             ],
           );
         }),
@@ -183,7 +189,7 @@ class HomeView extends GetView<HomeController> {
         const SectionHeaderWidget(title: 'Ongoing'),
         Obx(() {
           if (!controller.isLoading.value && controller.ongoingTasks.isEmpty) {
-            return const SizedBox.shrink(); // Hide section if empty? Or show empty state.
+            // return const SizedBox.shrink(); // Hide section if empty? Or show empty state.
             // Let's show empty state for now to be clear
             return const EmptyStateWidget(message: 'No ongoing tasks.', icon: Icons.timelapse);
           }
