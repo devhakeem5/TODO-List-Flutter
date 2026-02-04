@@ -36,9 +36,9 @@ class TimeTypeBottomSheet extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Title
-          const Text('تحديد الوقت', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          Text('select_time'.tr, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text('اختر نوع التوقيت للمهمة', style: TextStyle(color: Get.theme.hintColor)),
+          Text('timing_type_desc'.tr, style: TextStyle(color: Get.theme.hintColor)),
           const SizedBox(height: 24),
 
           // Option: Open (no time)
@@ -64,8 +64,8 @@ class TimeTypeBottomSheet extends StatelessWidget {
     return Obx(
       () => _TaskTypeOption(
         icon: Icons.all_inclusive,
-        title: 'مفتوحة',
-        description: 'بدون تاريخ انتهاء',
+        title: 'open'.tr,
+        description: 'open_desc'.tr,
         isSelected: controller.selectedTaskType.value == TaskType.open,
         onTap: () {
           controller.selectedTaskType.value = TaskType.open;
@@ -80,8 +80,8 @@ class TimeTypeBottomSheet extends StatelessWidget {
     return Obx(
       () => _TaskTypeOption(
         icon: Icons.calendar_today,
-        title: 'افتراضي',
-        description: 'مهمة ليوم واحد محدد',
+        title: 'default_day'.tr,
+        description: 'default_day_desc'.tr,
         isSelected: controller.selectedTaskType.value == TaskType.defaultDay,
         onTap: () async {
           final date = await showDatePicker(
@@ -105,8 +105,8 @@ class TimeTypeBottomSheet extends StatelessWidget {
     return Obx(
       () => _TaskTypeOption(
         icon: Icons.repeat,
-        title: 'متكررة',
-        description: 'تتكرر حسب أيام الأسبوع',
+        title: 'recurring'.tr,
+        description: 'recurring_desc'.tr,
         isSelected: controller.selectedTaskType.value == TaskType.recurring,
         onTap: () {
           controller.selectedTaskType.value = TaskType.recurring;
@@ -121,8 +121,8 @@ class TimeTypeBottomSheet extends StatelessWidget {
     return Obx(
       () => _TaskTypeOption(
         icon: Icons.date_range,
-        title: 'فترة زمنية',
-        description: 'من تاريخ إلى تاريخ',
+        title: 'time_range'.tr,
+        description: 'time_range_desc'.tr,
         isSelected: controller.selectedTaskType.value == TaskType.timeRange,
         onTap: () async {
           final dateRange = await showDateRangePicker(
@@ -227,14 +227,14 @@ class _RecurringConfigSheet extends StatelessWidget {
 
   const _RecurringConfigSheet({required this.controller});
 
-  static const _weekDays = [
-    (0, 'الأحد'),
-    (1, 'الاثنين'),
-    (2, 'الثلاثاء'),
-    (3, 'الأربعاء'),
-    (4, 'الخميس'),
-    (5, 'الجمعة'),
-    (6, 'السبت'),
+  static final _weekDays = [
+    (0, 'sun'.tr),
+    (1, 'mon'.tr),
+    (2, 'tue'.tr),
+    (3, 'wed'.tr),
+    (4, 'thu'.tr),
+    (5, 'fri'.tr),
+    (6, 'sat'.tr),
   ];
 
   @override
@@ -279,13 +279,16 @@ class _RecurringConfigSheet extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Time range
-          const Text('وقت التنفيذ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text(
+            'execution_time'.tr,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _buildTimeButton('من', true)),
+              Expanded(child: _buildTimeButton('from'.tr, true)),
               const SizedBox(width: 12),
-              Expanded(child: _buildTimeButton('إلى', false)),
+              Expanded(child: _buildTimeButton('to'.tr, false)),
             ],
           ),
           const SizedBox(height: 24),
@@ -295,7 +298,7 @@ class _RecurringConfigSheet extends StatelessWidget {
             () => Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('تاريخ انتهاء (اختياري)'),
+                Text('end_date_optional'.tr),
                 TextButton(
                   onPressed: () async {
                     final date = await showDatePicker(
@@ -311,7 +314,7 @@ class _RecurringConfigSheet extends StatelessWidget {
                   child: Text(
                     controller.endDate.value != null
                         ? '${controller.endDate.value!.day}/${controller.endDate.value!.month}/${controller.endDate.value!.year}'
-                        : 'تحديد',
+                        : 'select'.tr,
                   ),
                 ),
               ],
@@ -325,7 +328,7 @@ class _RecurringConfigSheet extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 if (controller.recurrenceDays.isEmpty) {
-                  Get.snackbar('خطأ', 'يرجى اختيار يوم واحد على الأقل');
+                  Get.snackbar('error'.tr, 'at_least_one_day'.tr);
                   return;
                 }
                 controller.hasDeadline.value = true;
@@ -335,7 +338,7 @@ class _RecurringConfigSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('تأكيد'),
+              child: Text('confirm'.tr),
             ),
           ),
         ],

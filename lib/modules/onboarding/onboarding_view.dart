@@ -17,26 +17,120 @@ class OnboardingView extends GetView<OnboardingController> {
                 controller: controller.pageController,
                 onPageChanged: controller.onPageChanged,
                 physics: const NeverScrollableScrollPhysics(), // Disable swipe
-                children: const [_NameScreen(), _CategorySelectionScreen(), _SummaryScreen()],
+                children: const [
+                  _LanguageScreen(),
+                  _NameScreen(),
+                  _CategorySelectionScreen(),
+                  _SummaryScreen(),
+                ],
               ),
             ),
             // Progress Indicator (Optional, but nice for UX)
-            // Obx(() => Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children:List.generate(3, (index) => Container(
-            //     margin: const EdgeInsets.all(4),
-            //     width: 10, height: 10,
-            //     decoration: BoxDecoration(
-            //       shape: BoxShape.circle,
-            //       color: controller.currentPage.value == index ? Colors.deepPurple : Colors.grey.shade300
-            //     ),
-            //   )),
-            // )),
-            // const SizedBox(height: 20),
+            Obx(
+              () => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  4,
+                  (index) => Container(
+                    margin: const EdgeInsets.all(4),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: controller.currentPage.value == index
+                          ? Get.theme.primaryColor
+                          : Colors.grey.shade300,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+}
+
+class _LanguageScreen extends GetView<OnboardingController> {
+  const _LanguageScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Icon(Icons.language, size: 80, color: Colors.blue),
+          const SizedBox(height: 32),
+          Text(
+            'select_language'.tr,
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'choose_language'.tr,
+            style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodySmall?.color),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 48),
+          _buildLanguageOption('ar_SA', 'العربية', '🇸🇦'),
+          const SizedBox(height: 16),
+          _buildLanguageOption('en_US', 'English', '🇺🇸'),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: controller.nextPage,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('next'.tr),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(String code, String label, String flag) {
+    return Obx(() {
+      final isSelected = controller.selectedLanguage.value == code;
+      return InkWell(
+        onTap: () => controller.changeLanguage(code),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: BoxDecoration(
+            color: isSelected ? Get.theme.primaryColor.withOpacity(0.1) : Get.theme.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? Get.theme.primaryColor : Colors.grey.shade300,
+              width: 2,
+            ),
+          ),
+          child: Row(
+            children: [
+              Text(flag, style: const TextStyle(fontSize: 24)),
+              const SizedBox(width: 16),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Get.theme.primaryColor : Get.theme.textTheme.bodyLarge?.color,
+                ),
+              ),
+              const Spacer(),
+              if (isSelected) Icon(Icons.check_circle, color: Get.theme.primaryColor),
+            ],
+          ),
+        ),
+      );
+    });
   }
 }
 
@@ -51,14 +145,14 @@ class _NameScreen extends GetView<OnboardingController> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Welcome!',
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          Text(
+            'welcome'.tr,
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
-            'What should we call you?',
+            'what_should_we_call_you'.tr,
             style: TextStyle(fontSize: 18, color: Theme.of(context).textTheme.bodySmall?.color),
             textAlign: TextAlign.center,
           ),
@@ -66,19 +160,31 @@ class _NameScreen extends GetView<OnboardingController> {
           TextField(
             controller: controller.nameController,
             onChanged: controller.updateName,
-            decoration: const InputDecoration(
-              labelText: 'Your Name (Optional)',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.person),
+            decoration: InputDecoration(
+              labelText: 'your_name_optional'.tr,
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.person),
             ),
           ),
           const SizedBox(height: 48),
-          ElevatedButton(
-            onPressed: controller.nextPage,
-            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-            child: const Text('Next'),
+          Row(
+            children: [
+              TextButton(onPressed: controller.previousPage, child: Text('back'.tr)),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: controller.nextPage,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('next'.tr),
+              ),
+            ],
           ),
-          TextButton(onPressed: controller.skipName, child: const Text('Skip')),
+          const SizedBox(height: 16),
+          Center(
+            child: TextButton(onPressed: controller.skipName, child: Text('skip'.tr)),
+          ),
         ],
       ),
     );
@@ -96,13 +202,13 @@ class _CategorySelectionScreen extends GetView<OnboardingController> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 32),
-          const Text(
-            'What do you want to achieve?',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          Text(
+            'what_do_you_want_to_achieve'.tr,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            'Select categories to start with.',
+            'select_categories_to_start_with'.tr,
             style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodySmall?.color),
           ),
           const SizedBox(height: 32),
@@ -132,14 +238,14 @@ class _CategorySelectionScreen extends GetView<OnboardingController> {
           ),
           Row(
             children: [
-              TextButton(onPressed: controller.previousPage, child: const Text('Back')),
+              TextButton(onPressed: controller.previousPage, child: Text('back'.tr)),
               const Spacer(),
               ElevatedButton(
                 onPressed: controller.nextPage,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
-                child: const Text('Next'),
+                child: Text('next'.tr),
               ),
             ],
           ),
@@ -166,14 +272,16 @@ class _SummaryScreen extends GetView<OnboardingController> {
           const SizedBox(height: 24),
           Obx(
             () => Text(
-              'You\'re all set, ${controller.userName.value.isEmpty ? 'Friend' : controller.userName.value}!',
+              'you_are_all_set'.trParams({
+                'name': controller.userName.value.isEmpty ? 'friend'.tr : controller.userName.value,
+              }),
               style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            'We have set up your workspace with the following categories:',
+            'workspace_setup_msg'.tr,
             style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodySmall?.color),
             textAlign: TextAlign.center,
           ),
@@ -195,14 +303,14 @@ class _SummaryScreen extends GetView<OnboardingController> {
           ),
           const SizedBox(height: 16),
           Text(
-            'You can always change this later in settings.',
+            'change_later_settings'.tr,
             style: TextStyle(fontSize: 12, color: Theme.of(context).textTheme.bodySmall?.color),
             textAlign: TextAlign.center,
           ),
           const Spacer(),
           Row(
             children: [
-              TextButton(onPressed: controller.previousPage, child: const Text('Back')),
+              TextButton(onPressed: controller.previousPage, child: Text('back'.tr)),
               const Spacer(),
               ElevatedButton(
                 onPressed: controller.completeOnboarding,
@@ -211,7 +319,7 @@ class _SummaryScreen extends GetView<OnboardingController> {
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
                 ),
-                child: const Text('Get Started'),
+                child: Text('get_started'.tr),
               ),
             ],
           ),

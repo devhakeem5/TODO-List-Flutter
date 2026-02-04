@@ -31,6 +31,7 @@ class HomeView extends GetView<HomeController> {
               children: [
                 const DailyOverviewWidget(),
                 const SizedBox(height: 16),
+                _buildDailyRecurringSection(),
                 _buildTodaySection(),
                 _buildOngoingSection(),
                 _buildUpcomingSection(),
@@ -46,6 +47,40 @@ class HomeView extends GetView<HomeController> {
         backgroundColor: Theme.of(context).floatingActionButtonTheme.backgroundColor,
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  Widget _buildDailyRecurringSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeaderWidget(title: 'daily_recurring_tasks'.tr),
+        Obx(() {
+          if (controller.isLoading.value) return const SizedBox.shrink();
+          if (controller.recurringTasksToday.isEmpty) {
+            return EmptyStateWidget(message: 'no_recurring_today'.tr, icon: Icons.repeat);
+          }
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: controller.recurringTasksToday.length,
+            itemBuilder: (context, index) {
+              final task = controller.recurringTasksToday[index];
+              return Obx(
+                () => TaskItemWidget(
+                  task: task,
+                  subtasks: controller.subtasksMap[task.id] ?? [],
+                  onTap: (id) => Get.toNamed(
+                    Routes.taskDetails,
+                    arguments: id,
+                  )?.then((_) => controller.loadTasks()),
+                  onSubtaskToggle: controller.toggleSubtaskCompletion,
+                ),
+              );
+            },
+          );
+        }),
+      ],
     );
   }
 
@@ -145,56 +180,61 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildTodaySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeaderWidget(title: 'Today\'s Tasks'),
-        Obx(() {
-          if (controller.isLoading.value) {
-            return const Center(
+    return Obx(() {
+      bool anyOtherTasks =
+          controller.recurringTasksToday.isNotEmpty ||
+          controller.ongoingTasks.isNotEmpty ||
+          controller.upcomingTasks.isNotEmpty;
+
+      if (controller.todayTasks.isEmpty && anyOtherTasks) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeaderWidget(title: 'todays_tasks'.tr),
+          if (controller.isLoading.value)
+            const Center(
               child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator()),
-            );
-          }
-          if (controller.todayTasks.isEmpty) {
-            return const EmptyStateWidget(
-              message: 'No tasks for today. Enjoy your day!',
-              icon: Icons.wb_sunny_outlined,
-            );
-          }
-          return ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: controller.todayTasks.length,
-            itemBuilder: (context, index) {
-              final task = controller.todayTasks[index];
-              return TaskItemWidget(
-                task: task,
-                subtasks: controller.subtasksMap[task.id] ?? [],
-                onTap: (id) {
-                  Get.toNamed(
-                    Routes.taskDetails,
-                    arguments: id,
-                  )?.then((_) => controller.loadTasks());
-                },
-                onSubtaskToggle: controller.toggleSubtaskCompletion,
-              );
-            },
-          );
-        }),
-      ],
-    );
+            )
+          else if (controller.todayTasks.isEmpty)
+            EmptyStateWidget(message: 'no_tasks_today'.tr, icon: Icons.wb_sunny_outlined)
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.todayTasks.length,
+              itemBuilder: (context, index) {
+                final task = controller.todayTasks[index];
+                return Obx(
+                  () => TaskItemWidget(
+                    task: task,
+                    subtasks: controller.subtasksMap[task.id] ?? [],
+                    onTap: (id) {
+                      Get.toNamed(
+                        Routes.taskDetails,
+                        arguments: id,
+                      )?.then((_) => controller.loadTasks());
+                    },
+                    onSubtaskToggle: controller.toggleSubtaskCompletion,
+                  ),
+                );
+              },
+            ),
+        ],
+      );
+    });
   }
 
   Widget _buildOngoingSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeaderWidget(title: 'Ongoing'),
+        SectionHeaderWidget(title: 'ongoing'.tr),
         Obx(() {
           if (!controller.isLoading.value && controller.ongoingTasks.isEmpty) {
-            // return const SizedBox.shrink(); // Hide section if empty? Or show empty state.
-            // Let's show empty state for now to be clear
-            return const EmptyStateWidget(message: 'No ongoing tasks.', icon: Icons.timelapse);
+            return EmptyStateWidget(message: 'no_ongoing'.tr, icon: Icons.timelapse);
           }
 
           return SizedBox(
@@ -208,14 +248,17 @@ class HomeView extends GetView<HomeController> {
                 return Container(
                   width: 200,
                   margin: const EdgeInsets.only(right: 12),
-                  child: TaskItemWidget(
-                    task: task,
-                    subtasks: controller.subtasksMap[task.id] ?? [],
-                    onTap: (id) => Get.toNamed(
-                      Routes.taskDetails,
-                      arguments: id,
-                    )?.then((_) => controller.loadTasks()),
-                    onSubtaskToggle: controller.toggleSubtaskCompletion,
+                  child: Obx(
+                    () => TaskItemWidget(
+                      task: task,
+                      subtasks: controller.subtasksMap[task.id] ?? [],
+                      showSubtasks: false,
+                      onTap: (id) => Get.toNamed(
+                        Routes.taskDetails,
+                        arguments: id,
+                      )?.then((_) => controller.loadTasks()),
+                      onSubtaskToggle: controller.toggleSubtaskCompletion,
+                    ),
                   ),
                 );
               },
@@ -230,13 +273,10 @@ class HomeView extends GetView<HomeController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeaderWidget(title: 'Upcoming'),
+        SectionHeaderWidget(title: 'upcoming'.tr),
         Obx(() {
           if (!controller.isLoading.value && controller.upcomingTasks.isEmpty) {
-            return const EmptyStateWidget(
-              message: 'No upcoming tasks.',
-              icon: Icons.calendar_today_outlined,
-            );
+            return EmptyStateWidget(message: 'no_upcoming'.tr, icon: Icons.calendar_today_outlined);
           }
           return ListView.builder(
             shrinkWrap: true,
@@ -244,14 +284,16 @@ class HomeView extends GetView<HomeController> {
             itemCount: controller.upcomingTasks.length,
             itemBuilder: (context, index) {
               final task = controller.upcomingTasks[index];
-              return TaskItemWidget(
-                task: task,
-                subtasks: controller.subtasksMap[task.id] ?? [],
-                onTap: (id) => Get.toNamed(
-                  Routes.taskDetails,
-                  arguments: id,
-                )?.then((_) => controller.loadTasks()),
-                onSubtaskToggle: controller.toggleSubtaskCompletion,
+              return Obx(
+                () => TaskItemWidget(
+                  task: task,
+                  subtasks: controller.subtasksMap[task.id] ?? [],
+                  onTap: (id) => Get.toNamed(
+                    Routes.taskDetails,
+                    arguments: id,
+                  )?.then((_) => controller.loadTasks()),
+                  onSubtaskToggle: controller.toggleSubtaskCompletion,
+                ),
               );
             },
           );

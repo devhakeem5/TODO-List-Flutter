@@ -14,6 +14,7 @@ import '../modules/task_details/view/task_details_view.dart';
 import '../modules/task_list/controller/task_list_controller.dart';
 import '../modules/task_list/view/completed_tasks_view.dart';
 import '../modules/task_list/view/in_progress_tasks_view.dart';
+import '../modules/task_list/view/recurring_tasks_view.dart';
 import '../modules/task_list/view/today_tasks_view.dart';
 import 'app_routes.dart';
 
@@ -72,6 +73,13 @@ class AppPages {
     GetPage(
       name: Routes.completedTasks,
       page: () => const CompletedTasksView(),
+      binding: BindingsBuilder(() {
+        Get.put(TaskListController());
+      }),
+    ),
+    GetPage(
+      name: Routes.recurringTasks,
+      page: () => const RecurringTasksView(),
       binding: BindingsBuilder(() {
         Get.put(TaskListController());
       }),

@@ -18,7 +18,7 @@ class CategoryListView extends GetView<CategoryController> {
           icon: Icon(Icons.arrow_back, color: Get.theme.iconTheme.color),
           onPressed: () => Get.back(),
         ),
-        title: Text('Manage Categories', style: Get.theme.appBarTheme.titleTextStyle),
+        title: Text('categories'.tr, style: Get.theme.appBarTheme.titleTextStyle),
         actions: [
           IconButton(
             icon: Icon(Icons.add, color: Get.theme.primaryColor),
@@ -41,12 +41,12 @@ class CategoryListView extends GetView<CategoryController> {
                 Icon(Icons.category_outlined, size: 64, color: Get.theme.disabledColor),
                 const SizedBox(height: 16),
                 Text(
-                  'No categories yet',
+                  'no_categories_yet'.tr,
                   style: TextStyle(color: Get.theme.disabledColor, fontSize: 16),
                 ),
                 TextButton(
                   onPressed: () => Get.to(() => AddEditCategoryView()),
-                  child: const Text('Add your first category'),
+                  child: Text('add_first_category'.tr),
                 ),
               ],
             ),

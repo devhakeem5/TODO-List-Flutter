@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class SectionHeaderWidget extends StatelessWidget {
   final String title;
@@ -19,7 +20,7 @@ class SectionHeaderWidget extends StatelessWidget {
               context,
             ).textTheme.titleLarge?.copyWith(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          if (onSeeAll != null) TextButton(onPressed: onSeeAll, child: const Text('See All')),
+          if (onSeeAll != null) TextButton(onPressed: onSeeAll, child: Text('see_all'.tr)),
         ],
       ),
     );

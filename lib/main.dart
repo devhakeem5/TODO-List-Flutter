@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 
 import 'core/database/db_helper.dart';
+import 'core/i18n/app_translations.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/storage_service.dart';
 import 'core/utils/theme.dart';
@@ -20,24 +22,27 @@ void main() async {
 
   // Initialize NotificationService
   final notificationService = Get.put(NotificationService());
-  // We initialize it here but requests permissions usually on demand or first run
-  // For this task requirements "request permissions when needed only" but also "on app launch from notification"
   await notificationService.init();
-  // Asking for permission early for better UX in this demo or follow logic in Home/Add Task
-  // notificationService.requestPermissions();
+
+  // Determine Initial Locale
+  final storage = Get.find<StorageService>();
+  final String? savedLang = storage.read<String>(StorageKeys.languageCode);
+  final Locale initialLocale = savedLang != null
+      ? Locale(savedLang.split('_')[0], savedLang.split('_')[1])
+      : const Locale('ar', 'SA'); // Default to Arabic
 
   // Determine Initial Route
-  final storage = Get.find<StorageService>();
   final bool isFirstLaunch = storage.read<bool>(StorageKeys.isFirstLaunch) ?? true;
   final String initialRoute = isFirstLaunch ? Routes.onboarding : Routes.home;
 
-  runApp(MyApp(initialRoute: initialRoute));
+  runApp(MyApp(initialRoute: initialRoute, initialLocale: initialLocale));
 }
 
 class MyApp extends StatelessWidget {
   final String initialRoute;
+  final Locale initialLocale;
 
-  const MyApp({super.key, required this.initialRoute});
+  const MyApp({super.key, required this.initialRoute, required this.initialLocale});
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +50,19 @@ class MyApp extends StatelessWidget {
       title: 'أنجز',
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: ThemeMode.system, // Respect system setting
+      themeMode: ThemeMode.system,
       initialBinding: InitialBinding(),
       initialRoute: initialRoute,
       getPages: AppPages.pages,
+      translations: AppTranslations(),
+      locale: initialLocale,
+      fallbackLocale: const Locale('ar', 'SA'),
+      supportedLocales: const [Locale('en', 'US'), Locale('ar', 'SA')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
     );
   }
 }

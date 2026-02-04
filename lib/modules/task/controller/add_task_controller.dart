@@ -121,16 +121,16 @@ class AddTaskController extends GetxController {
   String get timeTypeDisplayText {
     switch (selectedTaskType.value) {
       case TaskType.open:
-        return 'مفتوحة';
+        return 'open'.tr;
       case TaskType.defaultDay:
         return '${selectedDueDate.value.day}/${selectedDueDate.value.month}/${selectedDueDate.value.year}';
       case TaskType.recurring:
-        return '${recurrenceDays.length} أيام';
+        return 'n_days'.trParams({'count': recurrenceDays.length.toString()});
       case TaskType.timeRange:
         if (startDate.value != null && endDate.value != null) {
           return '${startDate.value!.day}/${startDate.value!.month} - ${endDate.value!.day}/${endDate.value!.month}';
         }
-        return 'فترة زمنية';
+        return 'time_range'.tr;
     }
   }
 
@@ -220,6 +220,15 @@ class AddTaskController extends GetxController {
         updatedAt: now,
       );
 
+      // Check for time overlap
+      if (selectedTaskType.value == TaskType.recurring) {
+        final conflict = await _checkTimeOverlap();
+        if (conflict != null) {
+          bool proceed = await _showOverlapWarning(conflict);
+          if (!proceed) return;
+        }
+      }
+
       // Schedule Notifications based on task type
       if (notificationId != null && reminderEnabled.value) {
         await _scheduleNotifications(newTask, notificationId);
@@ -243,7 +252,7 @@ class AddTaskController extends GetxController {
       }
 
       Get.back();
-      Get.snackbar('نجاح', 'تم إضافة المهمة بنجاح');
+      Get.snackbar('success'.tr, 'task_added_success'.tr);
 
       // Refresh Home if registered
       try {
@@ -256,7 +265,7 @@ class AddTaskController extends GetxController {
         // ignore
       }
     } catch (e) {
-      Get.snackbar('خطأ', 'فشل في إضافة المهمة: $e');
+      Get.snackbar('error'.tr, 'task_added_error'.trParams({'error': e.toString()}));
     }
   }
 
@@ -364,38 +373,123 @@ class AddTaskController extends GetxController {
     Task task,
     int baseId,
   ) async {
-    // For recurring, schedule 5 minutes before start time on next occurrence
-    final now = DateTime.now();
-    final nextDay = _getNextRecurrenceDay(task.recurrenceDays!, now);
+    if (task.startTime == null || task.recurrenceDays == null) return;
 
-    if (nextDay != null && task.startTime != null) {
-      final scheduledTime = DateTime(
-        nextDay.year,
-        nextDay.month,
-        nextDay.day,
+    final now = DateTime.now();
+    for (int i = 0; i < task.recurrenceDays!.length; i++) {
+      final day = task.recurrenceDays![i];
+
+      // Find the next occurrence of this specific weekday
+      DateTime scheduledDate = _getNextWeekday(day, now);
+
+      final startTimeFull = DateTime(
+        scheduledDate.year,
+        scheduledDate.month,
+        scheduledDate.day,
         task.startTime!.hour,
         task.startTime!.minute,
-      ).subtract(const Duration(minutes: 5));
+      );
 
+      final fiveMinsBefore = startTimeFull.subtract(const Duration(minutes: 5));
+
+      DateTime actualAlertTime = fiveMinsBefore;
+      String bodyText = 'المهمة "${task.title}" ستبدأ بعد 5 دقائق';
+
+      // Fallback: If 5 mins before is past but start time is future, use start time
+      if (actualAlertTime.isBefore(now)) {
+        if (startTimeFull.isAfter(now)) {
+          actualAlertTime = startTimeFull;
+          bodyText = 'حان الآن موعد المهمة: "${task.title}"';
+        } else {
+          // Both are past for today's occurrence, move to next week
+          final nextWeekDate = scheduledDate.add(const Duration(days: 7));
+          actualAlertTime = DateTime(
+            nextWeekDate.year,
+            nextWeekDate.month,
+            nextWeekDate.day,
+            task.startTime!.hour,
+            task.startTime!.minute,
+          ).subtract(const Duration(minutes: 5));
+        }
+      }
+
+      // Use a unique ID for each day's notification
       await service.scheduleNotification(
-        id: baseId,
-        title: 'المهمة المتكررة',
-        body: 'ستبدأ "${task.title}" بعد 5 دقائق',
-        scheduledTime: scheduledTime,
+        id: baseId + i,
+        title: 'تذكير المهمة المتكررة',
+        body: bodyText,
+        scheduledTime: actualAlertTime,
         payload: task.id,
       );
     }
   }
 
-  DateTime? _getNextRecurrenceDay(List<int> days, DateTime from) {
-    for (int i = 0; i < 7; i++) {
-      final checkDate = from.add(Duration(days: i));
-      final weekday = checkDate.weekday % 7; // Convert to 0=Sun format
-      if (days.contains(weekday)) {
-        return checkDate;
+  Future<Task?> _checkTimeOverlap() async {
+    if (startTimeOfDay.value == null || endTimeOfDay.value == null || recurrenceDays.isEmpty) {
+      return null;
+    }
+
+    final allTasks = await _taskRepository.readAll();
+    final newStart = startTimeOfDay.value!;
+    final newEnd = endTimeOfDay.value!;
+
+    for (var task in allTasks) {
+      if (task.taskType == TaskType.recurring && task.startTime != null && task.endTime != null) {
+        // Check if same days
+        final hasCommonDay = recurrenceDays.any(
+          (day) => task.recurrenceDays?.contains(day) ?? false,
+        );
+        if (!hasCommonDay) continue;
+
+        // Check if time overlaps
+        if (_isTimeOverlap(newStart, newEnd, task.startTime!, task.endTime!)) {
+          return task;
+        }
       }
     }
     return null;
+  }
+
+  bool _isTimeOverlap(TimeOfDay startA, TimeOfDay endA, TimeOfDay startB, TimeOfDay endB) {
+    final aStart = startA.hour * 60 + startA.minute;
+    final aEnd = endA.hour * 60 + endA.minute;
+    final bStart = startB.hour * 60 + startB.minute;
+    final bEnd = endB.hour * 60 + endB.minute;
+
+    return aStart < bEnd && bStart < aEnd;
+  }
+
+  Future<bool> _showOverlapWarning(Task conflictingTask) async {
+    final startStr = conflictingTask.startTime!.format(Get.context!);
+    final endStr = conflictingTask.endTime!.format(Get.context!);
+
+    final result = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text('time_overlap_title'.tr),
+        content: Text(
+          'time_overlap_msg'.trParams({
+            'title': conflictingTask.title,
+            'start': startStr,
+            'end': endStr,
+          }),
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: Text('change_time'.tr)),
+          ElevatedButton(onPressed: () => Get.back(result: true), child: Text('continue_save'.tr)),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  DateTime _getNextWeekday(int day, DateTime from) {
+    for (int i = 0; i < 7; i++) {
+      final checkDate = from.add(Duration(days: i));
+      if (checkDate.weekday % 7 == day) {
+        return checkDate;
+      }
+    }
+    return from;
   }
 
   Future<void> _scheduleTimeRangeNotifications(

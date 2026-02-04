@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/constants/enums.dart';
@@ -11,6 +12,7 @@ class SettingsController extends GetxController {
 
   final Rx<ReminderLevel> globalReminderLevel = ReminderLevel.medium.obs;
   final RxList<String> disabledTaskReminders = <String>[].obs;
+  final RxString currentLanguage = ''.obs;
 
   @override
   void onInit() {
@@ -19,6 +21,10 @@ class SettingsController extends GetxController {
   }
 
   void _loadSettings() {
+    // Load language
+    final savedLang = _storage.read<String>(StorageKeys.languageCode);
+    currentLanguage.value = savedLang ?? 'ar_SA';
+
     // Load global reminder level
     final savedLevel = _storage.read<String>(StorageKeys.globalReminderLevel);
     if (savedLevel != null) {
@@ -41,6 +47,14 @@ class SettingsController extends GetxController {
   Future<void> setReminderLevel(ReminderLevel level) async {
     globalReminderLevel.value = level;
     await _storage.write(StorageKeys.globalReminderLevel, level.toStringValue());
+  }
+
+  /// Change app language
+  Future<void> changeLanguage(String langCode) async {
+    currentLanguage.value = langCode;
+    final locale = Locale(langCode.split('_')[0], langCode.split('_')[1]);
+    await Get.updateLocale(locale);
+    await _storage.write(StorageKeys.languageCode, langCode);
   }
 
   /// Get effective reminder level for a task

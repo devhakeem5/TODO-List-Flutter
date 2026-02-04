@@ -28,7 +28,7 @@ class TaskListController extends GetxController {
     try {
       final now = DateTime.now();
       final todayTasks = await _taskRepository.getTasksByDate(now);
-      _allTasksCache = todayTasks;
+      _allTasksCache = todayTasks.where((t) => t.taskType != TaskType.recurring).toList();
 
       final allFromDb = await _taskRepository.readAll();
       _availableTasksCache = allFromDb.where((t) {
@@ -66,6 +66,49 @@ class TaskListController extends GetxController {
       await _loadSubtasksForTasks(tasks);
     } catch (e) {
       print('Error loading in-progress tasks: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> loadRecurringTasks() async {
+    isLoading.value = true;
+    try {
+      final now = DateTime.now();
+      final weekday = now.weekday % 7;
+      final allTasks = await _taskRepository.readAll();
+
+      final todayRecurring = allTasks.where((t) {
+        if (t.taskType != TaskType.recurring) return false;
+        if (t.recurrenceDays == null) return false;
+
+        // Exclude if today is an excluded day
+        if (t.excludedDays != null) {
+          final todayIso = now.toIso8601String().split('T')[0];
+          if (t.excludedDays!.contains(todayIso)) return false;
+        }
+
+        return t.recurrenceDays!.contains(weekday);
+      }).toList();
+
+      _allTasksCache = todayRecurring;
+      _availableTasksCache = [];
+
+      _applyFilters();
+
+      // Sort recurring specifically by time
+      tasks.sort((a, b) {
+        if (a.startTime == null) return 1;
+        if (b.startTime == null) return -1;
+        if (a.startTime!.hour != b.startTime!.hour) {
+          return a.startTime!.hour.compareTo(b.startTime!.hour);
+        }
+        return a.startTime!.minute.compareTo(b.startTime!.minute);
+      });
+
+      await _loadSubtasksForTasks(tasks);
+    } catch (e) {
+      print('Error loading recurring tasks: $e');
     } finally {
       isLoading.value = false;
     }

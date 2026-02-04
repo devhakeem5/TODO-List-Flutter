@@ -23,7 +23,7 @@ class FilterBottomSheet extends GetView<HomeController> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Filters',
+                'filters'.tr,
                 style: Theme.of(
                   context,
                 ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -33,14 +33,14 @@ class FilterBottomSheet extends GetView<HomeController> {
                   controller.clearFilters();
                   Get.back();
                 },
-                child: const Text('Reset'),
+                child: Text('reset'.tr),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
           // Status Filter
-          _buildSectionTitle(context, 'Status'),
+          _buildSectionTitle(context, 'status'.tr),
           const SizedBox(height: 8),
           Obx(
             () => Wrap(
@@ -48,7 +48,7 @@ class FilterBottomSheet extends GetView<HomeController> {
               children: TaskStatus.values.map((status) {
                 final isSelected = controller.filterStatus.value == status;
                 return ChoiceChip(
-                  label: Text(_formatEnum(status.name)),
+                  label: Text(status.name.tr),
                   selected: isSelected,
                   onSelected: (selected) {
                     controller.setFilterStatus(selected ? status : null);
@@ -67,7 +67,7 @@ class FilterBottomSheet extends GetView<HomeController> {
           const SizedBox(height: 16),
 
           // Priority Filter
-          _buildSectionTitle(context, 'Priority'),
+          _buildSectionTitle(context, 'priority'.tr),
           const SizedBox(height: 8),
           Obx(
             () => Wrap(
@@ -75,7 +75,7 @@ class FilterBottomSheet extends GetView<HomeController> {
               children: TaskPriority.values.map((priority) {
                 final isSelected = controller.filterPriority.value == priority;
                 return ChoiceChip(
-                  label: Text(_formatEnum(priority.name)),
+                  label: Text('priority_${priority.name}'.tr),
                   selected: isSelected,
                   onSelected: (selected) {
                     controller.setFilterPriority(selected ? priority : null);
@@ -94,12 +94,12 @@ class FilterBottomSheet extends GetView<HomeController> {
           const SizedBox(height: 16),
 
           // Category Filter
-          _buildSectionTitle(context, 'Categories'),
+          _buildSectionTitle(context, 'categories'.tr),
           const SizedBox(height: 8),
           Obx(() {
             if (controller.availableCategories.isEmpty) {
               return Text(
-                'No categories available',
+                'no_categories_available'.tr,
                 style: TextStyle(color: Theme.of(context).disabledColor),
               );
             }
@@ -138,7 +138,7 @@ class FilterBottomSheet extends GetView<HomeController> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Apply Filters'),
+              child: Text('apply_filters'.tr),
             ),
           ),
         ],
@@ -151,9 +151,5 @@ class FilterBottomSheet extends GetView<HomeController> {
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
     );
-  }
-
-  String _formatEnum(String name) {
-    return name[0].toUpperCase() + name.substring(1);
   }
 }

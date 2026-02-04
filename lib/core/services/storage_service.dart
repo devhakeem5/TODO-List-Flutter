@@ -43,4 +43,5 @@ class StorageKeys {
   static const String isFirstLaunch = 'is_first_launch';
   static const String globalReminderLevel = 'global_reminder_level';
   static const String disabledTaskReminders = 'disabled_task_reminders'; // JSON list of task IDs
+  static const String languageCode = 'language_code';
 }

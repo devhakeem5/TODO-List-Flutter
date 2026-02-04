@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/constants/enums.dart';
@@ -21,15 +22,23 @@ class HomeController extends GetxController {
   final RxList<Task> todayTasks = <Task>[].obs;
   final RxList<Task> ongoingTasks = <Task>[].obs;
   final RxList<Task> upcomingTasks = <Task>[].obs;
+  final RxList<Task> recurringTasksToday = <Task>[].obs;
 
   // Subtasks Map: taskId -> list of subtasks
   final RxMap<String, List<Subtask>> subtasksMap = <String, List<Subtask>>{}.obs;
 
   // Slider Stats
   final RxInt todayTasksCount = 0.obs;
+  final RxInt availableTasksCount = 0.obs;
   final RxInt inProgressCount = 0.obs;
   final RxInt completedThisMonthCount = 0.obs;
   final RxInt completedSubtasksThisMonth = 0.obs;
+
+  // Recurring Stats
+  final RxInt recurringCompletedCount = 0.obs;
+  final RxInt recurringMissedCount = 0.obs;
+  final RxBool showRecurringCard = false.obs;
+  final Rxn<Task> activeRecurringTask = Rxn<Task>();
 
   // Filter State
   final RxString searchText = ''.obs;
@@ -73,6 +82,9 @@ class HomeController extends GetxController {
     try {
       final now = DateTime.now();
 
+      // Recurring Task Reset Logic
+      await _resetRecurringTasks();
+
       // 1. Today's Date-Based Tasks
       final todayResult = await _taskRepository.getTasksByDate(now);
       _originalTodayTasks.assignAll(todayResult);
@@ -86,6 +98,10 @@ class HomeController extends GetxController {
       final afterTomorrow = now.add(const Duration(days: 3));
       final upcomingResult = await _taskRepository.getUpcomingTasks(tomorrow, afterTomorrow);
       _originalUpcomingTasks.assignAll(upcomingResult);
+
+      // 4. Recurring Tasks Today
+      final todayRecurring = await _taskRepository.getRecurringTasksForDay(now);
+      recurringTasksToday.assignAll(todayRecurring);
 
       // Apply cached filters
       filterTasks();
@@ -108,7 +124,15 @@ class HomeController extends GetxController {
       final startOfMonth = DateTime(now.year, now.month, 1);
       final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
-      todayTasksCount.value = _originalTodayTasks.length;
+      // Card 1 logic: Today's tasks (excluding recurring)
+      final todayTasksResult = await _taskRepository.getTasksByDate(now);
+      todayTasksCount.value = todayTasksResult
+          .where((t) => t.taskType != TaskType.recurring)
+          .length;
+
+      // Available Tasks (timeRange overlapping today)
+      availableTasksCount.value = await _taskRepository.countAvailableTasks(now);
+
       inProgressCount.value = await _taskRepository.countInProgress();
       completedThisMonthCount.value = await _taskRepository.countCompletedRange(
         startOfMonth,
@@ -118,8 +142,59 @@ class HomeController extends GetxController {
         startOfMonth,
         endOfMonth,
       );
+
+      // Recurring Stats
+      final recurringStats = await _taskRepository.countRecurringStats(now);
+      recurringCompletedCount.value = recurringStats['completed'] ?? 0;
+      recurringMissedCount.value = recurringStats['missed'] ?? 0;
+
+      final totalRecurringToday = await _taskRepository.countRecurringTasksForDay(now);
+      showRecurringCard.value = totalRecurringToday > 0;
+
+      // Find Active Recurring Task
+      _findActiveRecurringTask(now);
     } catch (e) {
       print('Error updating slider stats: $e');
+    }
+  }
+
+  void _findActiveRecurringTask(DateTime now) {
+    activeRecurringTask.value = null;
+    final currentTimeStr =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    for (var task in recurringTasksToday) {
+      if (task.startTime == null || task.endTime == null) continue;
+
+      final startStr = _timeToString(task.startTime);
+      final endStr = _timeToString(task.endTime);
+
+      if (startStr != null && endStr != null) {
+        if (currentTimeStr.compareTo(startStr) >= 0 && currentTimeStr.compareTo(endStr) <= 0) {
+          activeRecurringTask.value = task;
+          break;
+        }
+      }
+    }
+  }
+
+  String? _timeToString(TimeOfDay? time) {
+    if (time == null) return null;
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _resetRecurringTasks() async {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+
+    final allTasks = await _taskRepository.readAll();
+    for (var task in allTasks) {
+      if (task.taskType == TaskType.recurring && task.status == TaskStatus.completed) {
+        if (task.updatedAt.isBefore(startOfToday)) {
+          final resetTask = task.copyWith(status: TaskStatus.pending, updatedAt: now);
+          await _taskRepository.update(resetTask);
+        }
+      }
     }
   }
 
@@ -128,6 +203,7 @@ class HomeController extends GetxController {
       ..._originalTodayTasks.map((t) => t.id),
       ..._originalOngoingTasks.map((t) => t.id),
       ..._originalUpcomingTasks.map((t) => t.id),
+      ...recurringTasksToday.map((t) => t.id),
     };
 
     for (var taskId in allTaskIds) {

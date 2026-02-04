@@ -18,7 +18,7 @@ class TodayTasksView extends GetView<TaskListController> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مهام اليوم'),
+        title: Text('today_tasks_title'.tr),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.loadTodayTasks()),
         ],
@@ -33,17 +33,14 @@ class TodayTasksView extends GetView<TaskListController> {
               }
 
               if (controller.tasks.isEmpty && controller.availableTasks.isEmpty) {
-                return const EmptyStateWidget(
-                  message: 'لا توجد مهام مطابقة للفلترة حالياً',
-                  icon: Icons.search_off,
-                );
+                return EmptyStateWidget(message: 'no_tasks_lately'.tr, icon: Icons.sunny);
               }
 
               return ListView(
                 padding: const EdgeInsets.only(bottom: 20),
                 children: [
                   if (controller.tasks.isNotEmpty) ...[
-                    _buildSectionHeader(context, 'مهام يجب إنجازها اليوم'),
+                    _buildSectionHeader(context, 'exclusive_today'.tr),
                     ...controller.tasks.map(
                       (task) => TaskItemWidget(
                         task: task,
@@ -55,7 +52,7 @@ class TodayTasksView extends GetView<TaskListController> {
                   ],
                   if (controller.availableTasks.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    _buildSectionHeader(context, 'مهام يمكن العمل عليها'),
+                    _buildSectionHeader(context, 'continuous_tasks'.tr),
                     ...controller.availableTasks.map(
                       (task) => _buildAvailableTaskItem(context, task),
                     ),
@@ -78,7 +75,7 @@ class TodayTasksView extends GetView<TaskListController> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              _buildFilterLabel(context, 'التصنيفات:'),
+              _buildFilterLabel(context, 'categories_label'.tr),
               const SizedBox(width: 8),
               Obx(
                 () => Wrap(
@@ -102,14 +99,14 @@ class TodayTasksView extends GetView<TaskListController> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           child: Row(
             children: [
-              _buildFilterLabel(context, 'الأولوية:'),
+              _buildFilterLabel(context, 'priority_label'.tr),
               const SizedBox(width: 8),
               Obx(
                 () => Wrap(
                   spacing: 8,
                   children: TaskPriority.values.map((priority) {
                     return ChoiceChip(
-                      label: Text(priority.name.capitalizeFirst!),
+                      label: Text('priority_${priority.name}'.tr),
                       selected: controller.filterPriority.value == priority,
                       onSelected: (val) => controller.setPriorityFilter(priority),
                     );
@@ -166,7 +163,7 @@ class TodayTasksView extends GetView<TaskListController> {
                   onPressed: () =>
                       controller.markAsInProgress(task.id).then((_) => controller.loadTodayTasks()),
                   icon: const Icon(Icons.play_arrow, size: 18),
-                  label: const Text('بدء المهمة الآن'),
+                  label: Text('start_task_now'.tr),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange.shade700,
                     foregroundColor: Colors.white,

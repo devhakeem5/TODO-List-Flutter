@@ -17,16 +17,16 @@ class StatsView extends GetView<StatsController> {
           icon: Icon(Icons.arrow_back, color: Get.theme.iconTheme.color),
           onPressed: () => Get.back(),
         ),
-        title: Text('Statistics', style: Get.theme.appBarTheme.titleTextStyle),
+        title: Text('stats'.tr, style: Get.theme.appBarTheme.titleTextStyle),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Your Progress',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              'your_progress'.tr,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -40,21 +40,21 @@ class StatsView extends GetView<StatsController> {
               children: [
                 // 1. Today
                 _buildStatCard(
-                  title: 'Today',
+                  title: 'today'.tr,
                   valueObx: controller.completedToday,
                   icon: Icons.today,
                   color: Colors.blueAccent,
                 ),
                 // 2. This Week
                 _buildStatCard(
-                  title: 'Last 7 Days',
+                  title: 'last_7_days'.tr,
                   valueObx: controller.completedThisWeek,
                   icon: Icons.date_range,
                   color: Colors.orangeAccent,
                 ),
                 // 3. Overdue
                 _buildStatCard(
-                  title: 'Overdue',
+                  title: 'overdue'.tr,
                   valueObx: controller.overdueCount,
                   icon: Icons.warning_amber_rounded,
                   color: Colors.redAccent,
@@ -161,7 +161,7 @@ class StatsView extends GetView<StatsController> {
               ),
               Obx(
                 () => Text(
-                  '${controller.topCategoryCount.value} Tasks',
+                  'n_tasks'.trParams({'count': controller.topCategoryCount.value.toString()}),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -172,7 +172,7 @@ class StatsView extends GetView<StatsController> {
             ],
           ),
           Text(
-            'Top Category',
+            'top_category'.tr,
             style: TextStyle(
               fontSize: 12,
               color: Get.theme.colorScheme.onPrimary.withOpacity(0.6),

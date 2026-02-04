@@ -13,16 +13,16 @@ class AddTaskView extends GetView<AddTaskController> {
     return Scaffold(
       backgroundColor: Get.theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Add Task'),
+        title: Text('add_task'.tr),
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Get.back()),
         actions: [
           Obx(
             () => TextButton(
               onPressed: controller.isTitleValid.value ? () => controller.saveTask() : null,
-              child: const Text(
-                'Save',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              child: Text(
+                'save'.tr,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
           ),
@@ -84,14 +84,14 @@ class AddTaskView extends GetView<AddTaskController> {
 
   Widget _buildBasicInfoSection() {
     return _buildSection(
-      title: 'General Info',
+      title: 'general_info'.tr,
       icon: Icons.info_outline,
       child: Column(
         children: [
           TextField(
             controller: controller.titleController,
-            decoration: const InputDecoration(
-              hintText: 'What needs to be done?',
+            decoration: InputDecoration(
+              hintText: 'what_needs_done'.tr,
               border: InputBorder.none,
               focusedBorder: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -103,8 +103,8 @@ class AddTaskView extends GetView<AddTaskController> {
           TextField(
             controller: controller.descriptionController,
             maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Add a description (optional)',
+            decoration: InputDecoration(
+              hintText: 'description_hint'.tr,
               border: InputBorder.none,
               focusedBorder: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -119,7 +119,7 @@ class AddTaskView extends GetView<AddTaskController> {
 
   Widget _buildTimingSection() {
     return _buildSection(
-      title: 'التوقيت',
+      title: 'timing'.tr,
       icon: Icons.access_time,
       child: Column(
         children: [
@@ -154,7 +154,9 @@ class AddTaskView extends GetView<AddTaskController> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            hasTime ? taskType.arabicLabel : 'تحديد الوقت',
+                            hasTime
+                                ? 'recurring'.tr
+                                : 'select_time'.tr, // Simplified for now, taskType.name can be used
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: hasTime
@@ -279,15 +281,15 @@ class AddTaskView extends GetView<AddTaskController> {
 
   Widget _buildMetadataSection() {
     return _buildSection(
-      title: 'Customization',
+      title: 'customization'.tr,
       icon: Icons.tune,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('category'.tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Obx(() {
-            if (controller.categories.isEmpty) return const Text('No categories.');
+            if (controller.categories.isEmpty) return Text('no_categories'.tr);
             return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -310,16 +312,16 @@ class AddTaskView extends GetView<AddTaskController> {
             );
           }),
           const SizedBox(height: 20),
-          const Text('Priority', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('priority'.tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Obx(
             () => Row(
               children: [
-                _buildPriorityButton('Low', TaskPriority.low, Colors.green),
+                _buildPriorityButton('priority_low'.tr, TaskPriority.low, Colors.green),
                 const SizedBox(width: 8),
-                _buildPriorityButton('Medium', TaskPriority.medium, Colors.amber),
+                _buildPriorityButton('priority_medium'.tr, TaskPriority.medium, Colors.amber),
                 const SizedBox(width: 8),
-                _buildPriorityButton('High', TaskPriority.high, Colors.red),
+                _buildPriorityButton('priority_high'.tr, TaskPriority.high, Colors.red),
               ],
             ),
           ),
@@ -356,7 +358,7 @@ class AddTaskView extends GetView<AddTaskController> {
 
   Widget _buildSubtasksSection() {
     return _buildSection(
-      title: 'Subtasks',
+      title: 'subtasks'.tr,
       icon: Icons.checklist,
       child: Column(
         children: [
@@ -401,7 +403,7 @@ class AddTaskView extends GetView<AddTaskController> {
           TextButton.icon(
             onPressed: () => controller.addSubtask(),
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('Add Subtask'),
+            label: Text('add_subtask'.tr),
           ),
         ],
       ),
@@ -414,14 +416,14 @@ class AddTaskView extends GetView<AddTaskController> {
         Theme(
           data: Get.theme.copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
-            title: const Text('Advanced Options', style: TextStyle(fontWeight: FontWeight.bold)),
+            title: Text('advanced_options'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
             leading: Icon(Icons.settings_outlined, color: Get.theme.primaryColor),
             childrenPadding: const EdgeInsets.all(16),
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Reminder'),
+                  Text('reminder'.tr),
                   TextButton(
                     onPressed: () async {
                       final date = await showDatePicker(
@@ -449,7 +451,7 @@ class AddTaskView extends GetView<AddTaskController> {
                     child: Obx(
                       () => Text(
                         controller.reminderDateTime.value == null
-                            ? 'Set Reminder'
+                            ? 'set_reminder'.tr
                             : controller.reminderDateTime.value!.toString().substring(0, 16),
                       ),
                     ),
@@ -499,9 +501,9 @@ class AddTaskView extends GetView<AddTaskController> {
               backgroundColor: Get.theme.primaryColor,
               elevation: 0,
             ),
-            child: const Text(
-              'Create Task',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            child: Text(
+              'create_task'.tr,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
         ),

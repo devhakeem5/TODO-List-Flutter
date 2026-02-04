@@ -14,23 +14,35 @@ class OnboardingController extends GetxController {
   final PageController pageController = PageController();
   final RxInt currentPage = 0.obs;
 
+  // Screen 0: Language
+  final RxString selectedLanguage = ''.obs;
+
   // Screen 1: Name
   final TextEditingController nameController = TextEditingController();
   final RxString userName = ''.obs;
 
   // Screen 2: Categories
-  final List<String> defaultCategories = ['Personal', 'Work', 'Study', 'Health', 'Projects'];
+  final List<String> defaultCategories = ['Personal', 'Work', 'Study', 'Health', 'General'];
   final RxList<String> selectedCategories = <String>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    // Default selection
-    selectedCategories.add('Personal');
+    // Initialize selected language from current locale
+    selectedLanguage.value = Get.locale?.toString() ?? 'ar_SA';
+    // Default selection for categories
+    selectedCategories.add('General');
+  }
+
+  void changeLanguage(String langCode) {
+    selectedLanguage.value = langCode;
+    final locale = Locale(langCode.split('_')[0], langCode.split('_')[1]);
+    Get.updateLocale(locale);
+    _storage.write(StorageKeys.languageCode, langCode);
   }
 
   void nextPage() {
-    if (currentPage.value < 2) {
+    if (currentPage.value < 3) {
       pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     }
   }

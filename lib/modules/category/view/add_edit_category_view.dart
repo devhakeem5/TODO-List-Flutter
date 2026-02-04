@@ -44,7 +44,7 @@ class AddEditCategoryView extends GetView<CategoryController> {
           onPressed: () => Get.back(),
         ),
         title: Text(
-          category == null ? 'New Category' : 'Edit Category',
+          category == null ? 'add_category'.tr : 'edit_category'.tr,
           style: Get.theme.appBarTheme.titleTextStyle,
         ),
       ),
@@ -54,12 +54,12 @@ class AddEditCategoryView extends GetView<CategoryController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Name Field
-            Text('Category Name', style: Get.theme.textTheme.titleMedium),
+            Text('category_name'.tr, style: Get.theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             TextField(
               controller: nameController,
               decoration: InputDecoration(
-                hintText: 'e.g., Work, Personal',
+                hintText: 'category_name_hint'.tr,
                 filled: true,
                 fillColor: Get.theme.inputDecorationTheme.fillColor,
                 border: OutlineInputBorder(
@@ -71,7 +71,7 @@ class AddEditCategoryView extends GetView<CategoryController> {
             const SizedBox(height: 24),
 
             // Color Picker
-            Text('Category Color', style: Get.theme.textTheme.titleMedium),
+            Text('category_color'.tr, style: Get.theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             Obx(
               () => Wrap(
@@ -136,7 +136,7 @@ class AddEditCategoryView extends GetView<CategoryController> {
                   elevation: 2,
                 ),
                 child: Text(
-                  category == null ? 'Create Category' : 'Save Changes',
+                  category == null ? 'create_category'.tr : 'save_changes'.tr,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

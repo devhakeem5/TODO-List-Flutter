@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -242,5 +243,85 @@ class TaskRepository extends GetxService {
     );
 
     return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<int> countAvailableTasks(DateTime date) async {
+    final db = await _dbHelper.database;
+    final dateStr = DateTime(date.year, date.month, date.day).toIso8601String();
+    final endOfDayStr = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+
+    final result = await db.rawQuery(
+      '''
+      SELECT COUNT(*) as count 
+      FROM ${DbConstants.tableTasks} 
+      WHERE ${DbConstants.colTaskType} = 'timeRange' 
+      AND ${DbConstants.colStatus} != 'completed'
+      AND ${DbConstants.colStartDate} <= ? 
+      AND ${DbConstants.colEndDate} >= ?
+    ''',
+      [endOfDayStr, dateStr],
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<Map<String, int>> countRecurringStats(DateTime date) async {
+    final tasks = await getRecurringTasksForDay(date);
+    final now = DateTime.now();
+    final currentTimeStr =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    int completed = 0;
+    int missed = 0;
+
+    for (var task in tasks) {
+      if (task.status == TaskStatus.completed) {
+        completed++;
+      } else {
+        // Missed today: start time passed and NOT completed
+        final startTimeStr = _timeToString(task.startTime);
+        if (startTimeStr != null && startTimeStr.compareTo(currentTimeStr) < 0) {
+          missed++;
+        }
+      }
+    }
+
+    return {'completed': completed, 'missed': missed, 'totalToday': tasks.length};
+  }
+
+  Future<int> countRecurringTasksForDay(DateTime date) async {
+    final tasks = await getRecurringTasksForDay(date);
+    return tasks.length;
+  }
+
+  Future<List<Task>> getRecurringTasksForDay(DateTime date) async {
+    final db = await _dbHelper.database;
+    final weekday = date.weekday % 7;
+
+    // Fetch all recurring tasks and filter in Dart for JSON accuracy
+    final result = await db.query(
+      DbConstants.tableTasks,
+      where: '${DbConstants.colTaskType} = ?',
+      whereArgs: [TaskType.recurring.name],
+    );
+
+    return result.map((json) => Task.fromMap(json)).where((task) {
+      if (task.recurrenceDays == null) return false;
+
+      // Check recurrence days
+      if (!task.recurrenceDays!.contains(weekday)) return false;
+
+      // Check excluded days
+      if (task.excludedDays != null) {
+        final dateStr = date.toIso8601String().split('T')[0];
+        if (task.excludedDays!.contains(dateStr)) return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  static String? _timeToString(TimeOfDay? time) {
+    if (time == null) return null;
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 }

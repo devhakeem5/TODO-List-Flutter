@@ -15,7 +15,7 @@ class CompletedTasksView extends GetView<TaskListController> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('أرشيف المهام المكتملة'),
+        title: Text('completed_archive'.tr),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -29,8 +29,8 @@ class CompletedTasksView extends GetView<TaskListController> {
         }
 
         if (controller.tasks.isEmpty) {
-          return const EmptyStateWidget(
-            message: 'لا توجد مهام مكتملة هذا الشهر',
+          return EmptyStateWidget(
+            message: 'no_completed_this_month'.tr,
             icon: Icons.task_alt_rounded,
           );
         }
@@ -61,13 +61,13 @@ class CompletedTasksView extends GetView<TaskListController> {
               style: const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.grey),
             ),
             subtitle: Text(
-              'اكتملت في: ${DateFormat('yyyy-MM-dd').format(task.updatedAt)}',
+              'completed_on'.trParams({'date': DateFormat('yyyy-MM-dd').format(task.updatedAt)}),
               style: const TextStyle(fontSize: 12),
             ),
             trailing: IconButton(
               icon: const Icon(Icons.restore_page_rounded, color: Colors.blue),
               onPressed: () => _showReactivateDialog(context, task),
-              tooltip: 'إعادة تنشيط المهمة',
+              tooltip: 'reactivate_tooltip'.tr,
             ),
           ),
         ],
@@ -99,16 +99,20 @@ class CompletedTasksView extends GetView<TaskListController> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'إعادة تنشيط المهمة',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  Text(
+                    'reactivate_task'.tr,
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  const Text('قم بتحديد موعد جديد للمهمة قبل إعادة تفعيلها:'),
+                  Text('set_new_deadline'.tr),
                   const SizedBox(height: 20),
                   ListTile(
                     leading: const Icon(Icons.calendar_today),
-                    title: Text('التاريخ: ${DateFormat('yyyy-MM-dd').format(selectedDate)}'),
+                    title: Text(
+                      'date_label'.trParams({
+                        'date': DateFormat('yyyy-MM-dd').format(selectedDate),
+                      }),
+                    ),
                     onTap: () async {
                       final picked = await showDatePicker(
                         context: context,
@@ -123,7 +127,7 @@ class CompletedTasksView extends GetView<TaskListController> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.access_time),
-                    title: Text('الوقت: ${selectedTime.format(context)}'),
+                    title: Text('time_label'.trParams({'time': selectedTime.format(context)})),
                     onTap: () async {
                       final picked = await showTimePicker(
                         context: context,
@@ -149,7 +153,7 @@ class CompletedTasksView extends GetView<TaskListController> {
                         controller.reactivateTask(task.id, newDueDate).then((_) {
                           Get.back();
                           controller.loadCompletedTasks();
-                          Get.snackbar('تم التنشيط', 'تمت إعادة المهمة إلى قائمة المهام بنجاح');
+                          Get.snackbar('reactivate_success_title'.tr, 'reactivate_success_msg'.tr);
                         });
                       },
                       style: ElevatedButton.styleFrom(
@@ -157,7 +161,7 @@ class CompletedTasksView extends GetView<TaskListController> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
-                      child: const Text('تأكيد وإعادة التنشيط'),
+                      child: Text('confirm_reactivate'.tr),
                     ),
                   ),
                 ],

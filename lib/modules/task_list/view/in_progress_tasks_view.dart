@@ -16,7 +16,7 @@ class InProgressTasksView extends GetView<TaskListController> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('مهام جاري تنفيذها'),
+        title: Text('in_progress_tasks_title'.tr),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -34,8 +34,8 @@ class InProgressTasksView extends GetView<TaskListController> {
               }
 
               if (controller.tasks.isEmpty) {
-                return const EmptyStateWidget(
-                  message: 'لا توجد مهام جارية حالياً تطابق الفلترة',
+                return EmptyStateWidget(
+                  message: 'no_in_progress_match'.tr,
                   icon: Icons.pending_actions_rounded,
                 );
               }
@@ -69,7 +69,7 @@ class InProgressTasksView extends GetView<TaskListController> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              _buildFilterLabel(context, 'التصنيفات:'),
+              _buildFilterLabel(context, 'categories_label'.tr),
               const SizedBox(width: 8),
               Obx(
                 () => Wrap(
@@ -93,14 +93,14 @@ class InProgressTasksView extends GetView<TaskListController> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           child: Row(
             children: [
-              _buildFilterLabel(context, 'الأولوية:'),
+              _buildFilterLabel(context, 'priority_label'.tr),
               const SizedBox(width: 8),
               Obx(
                 () => Wrap(
                   spacing: 8,
                   children: TaskPriority.values.map((priority) {
                     return ChoiceChip(
-                      label: Text(priority.name.capitalizeFirst!),
+                      label: Text('priority_${priority.name}'.tr),
                       selected: controller.filterPriority.value == priority,
                       onSelected: (val) => controller.setPriorityFilter(priority),
                     );

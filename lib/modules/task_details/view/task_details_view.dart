@@ -12,7 +12,7 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Task Details'),
+        title: Text('task_details'.tr),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -28,7 +28,7 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
 
         final task = controller.task.value;
         if (task == null) {
-          return const Center(child: Text('Task not found'));
+          return Center(child: Text('task_not_found'.tr));
         }
 
         return SingleChildScrollView(
@@ -86,9 +86,12 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
         controller.updateStatus(status);
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<TaskStatus>>[
-        const PopupMenuItem<TaskStatus>(value: TaskStatus.pending, child: Text('Pending')),
-        const PopupMenuItem<TaskStatus>(value: TaskStatus.inProgress, child: Text('In Progress')),
-        const PopupMenuItem<TaskStatus>(value: TaskStatus.completed, child: Text('Completed')),
+        PopupMenuItem<TaskStatus>(value: TaskStatus.pending, child: Text('status_pending'.tr)),
+        PopupMenuItem<TaskStatus>(
+          value: TaskStatus.inProgress,
+          child: Text('status_inProgress'.tr),
+        ),
+        PopupMenuItem<TaskStatus>(value: TaskStatus.completed, child: Text('status_completed'.tr)),
       ],
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -101,7 +104,7 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              currentStatus.name.capitalizeFirst!,
+              'status_${currentStatus.name}'.tr,
               style: TextStyle(color: _getStatusColor(currentStatus), fontWeight: FontWeight.bold),
             ),
             const SizedBox(width: 4),
@@ -160,25 +163,25 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
                   children: [
                     Icon(Icons.flag, color: theme.colorScheme.primary),
                     const SizedBox(width: 12),
-                    Text('Priority', style: theme.textTheme.bodyLarge),
+                    Text('priority'.tr, style: theme.textTheme.bodyLarge),
                   ],
                 ),
                 SegmentedButton<TaskPriority>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: TaskPriority.low,
-                      label: Text('Low'),
-                      icon: Icon(Icons.low_priority),
+                      label: Text('priority_low'.tr),
+                      icon: const Icon(Icons.low_priority),
                     ),
                     ButtonSegment(
                       value: TaskPriority.medium,
-                      label: Text('Med'),
-                      icon: Icon(Icons.playlist_play),
+                      label: Text('med'.tr),
+                      icon: const Icon(Icons.playlist_play),
                     ),
                     ButtonSegment(
                       value: TaskPriority.high,
-                      label: Text('High'),
-                      icon: Icon(Icons.priority_high),
+                      label: Text('priority_high'.tr),
+                      icon: const Icon(Icons.priority_high),
                     ),
                   ],
                   selected: {task.priority},
@@ -203,7 +206,7 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Subtasks', style: Theme.of(context).textTheme.titleLarge),
+        Text('subtasks'.tr, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
         Obx(
           () => ListView.builder(
@@ -242,8 +245,8 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
             Expanded(
               child: TextField(
                 controller: controller.subtaskController,
-                decoration: const InputDecoration(
-                  hintText: 'Add a subtask...',
+                decoration: InputDecoration(
+                  hintText: 'add_subtask_prompt'.tr,
                   border: InputBorder.none,
                 ),
                 onSubmitted: (_) => controller.addSubTask(),
@@ -263,14 +266,14 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Notes', style: Theme.of(context).textTheme.titleLarge),
+        Text('notes'.tr, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
         TextField(
           controller: controller.notesController,
           maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'Add notes here...',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: 'add_notes_hint'.tr,
+            border: const OutlineInputBorder(),
           ),
           onChanged: (_) {
             // Debounce or save on button? Requirement: "Save directly"
@@ -287,7 +290,7 @@ class TaskDetailsView extends GetView<TaskDetailsController> {
               FocusScope.of(context).unfocus();
               controller.saveNotes();
             },
-            child: const Text('Save Notes'),
+            child: Text('save_notes'.tr),
           ),
         ),
       ],

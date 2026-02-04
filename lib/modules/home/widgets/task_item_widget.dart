@@ -10,6 +10,7 @@ import '../../category/controller/category_controller.dart';
 class TaskItemWidget extends StatelessWidget {
   final Task task;
   final List<Subtask> subtasks;
+  final bool showSubtasks;
   final Function(String)? onTap;
   final Function(Subtask)? onSubtaskToggle;
 
@@ -17,6 +18,7 @@ class TaskItemWidget extends StatelessWidget {
     super.key,
     required this.task,
     this.subtasks = const [],
+    this.showSubtasks = true,
     this.onTap,
     this.onSubtaskToggle,
   });
@@ -130,7 +132,7 @@ class TaskItemWidget extends StatelessWidget {
                 ],
               ),
               // --- Subtasks Section ---
-              if (subtasks.isNotEmpty) ...[
+              if (showSubtasks && subtasks.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 const Divider(height: 1),
                 const SizedBox(height: 8),
